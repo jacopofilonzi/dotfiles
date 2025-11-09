@@ -1,0 +1,14 @@
+services:
+  webserver:
+    # Use the official Apache HTTPD image
+    image: httpd:2.4
+    
+    # Map port 8080 on your host machine to port 80 in the container
+    #ports:
+    #  - "8080:80"
+      
+    # Mount a local directory into the container's web root
+    # '.' means the current directory where docker-compose.yml is located
+    volumes:
+      - ./data:/usr/local/apache2/htdocs/
+

@@ -1,0 +1,19 @@
+services:
+  webserver:
+    labels:
+      traefik.http.routers.webserver_cfproxy.rule: Host(`domain.com`)
+      traefik.http.routers.webserver_cfproxy.entrypoints: cfproxy
+      traefik.http.routers.webserver_cfproxy.service: webserver
+
+      #traefik.http.routers.webserver_cfproxy.middlewares: simpleAuth@file #optional for basic auth
+
+      traefik.http.services.webserver.loadbalancer.server.port: 80
+
+      traefik.enable: true
+      traefik.docker.network: cust_traefik
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true
