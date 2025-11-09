@@ -1,0 +1,28 @@
+services:
+  pihole:
+    # ... (image, volumi, ecc.)
+    labels:
+      # --- Abilitazione e Rete ---
+      traefik.enable: "true"
+      traefik.docker.network: "cust_traefik"
+
+      # --- Router (Come Traefik riceve il traffico) ---
+      traefik.http.routers.pihole.rule: "Host(`hole.l.domain.com`)"
+      traefik.http.routers.pihole.entrypoints: "websecure"
+      
+      # --- Gestione TLS (HTTPS) ---
+      traefik.http.routers.pihole.tls: "true"
+      traefik.http.routers.pihole.tls.certresolver: "lets-encrypt"
+
+      # Collega questo router al servizio definito sotto
+      traefik.http.routers.pihole.service: "pihole"
+
+      # --- Servizio (Dove Traefik inoltra il traffico) ---
+      traefik.http.services.pihole.loadbalancer.server.port: 80
+
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true
