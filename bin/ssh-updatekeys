@@ -1,0 +1,70 @@
+#!/bin/bash
+
+# Uscita immediata se un comando fallisce o se si usa una variabile non definita
+set -euo pipefail
+
+# --- Impostazioni ---
+DEST_DIR="$HOME/.ssh"
+DEST_FILE="$DEST_DIR/authorized_keys"
+DEFAULT_SOURCE_DIR="$DEST_DIR/external_authorized_keys"
+MAX_DEPTH=4
+
+# --- Logica Script ---
+
+# 1. Determina la directory sorgente
+if [ $# -eq 0 ]; then
+    KEY_SOURCE_DIR="$DEFAULT_SOURCE_DIR"
+#    echo "INFO: Nessun percorso specificato. Uso il default: $KEY_SOURCE_DIR"
+elif [ $# -eq 1 ]; then
+    KEY_SOURCE_DIR="$1"
+#    echo "INFO: Uso il percorso specificato: $KEY_SOURCE_DIR"
+else
+    echo "Errore: Fornisci al massimo un argomento (il percorso della directory sorgente)." >&2
+    echo "Utilizzo: $0 [percorso_opzionale]" >&2
+    exit 1
+fi
+
+# 2. Controllo: La sorgente deve esistere
+if [ ! -d "$KEY_SOURCE_DIR" ]; then
+    echo "Errore: La directory sorgente non è stata trovata:" >&2
+    echo "$KEY_SOURCE_DIR" >&2
+    exit 1
+fi
+
+# 3. Preparazione: Assicura che ~/.ssh esista
+#echo "INFO: Preparo la directory di destinazione $DEST_DIR..."
+mkdir -p "$DEST_DIR"
+chmod 700 "$DEST_DIR"
+
+# 4. Lavoro su un file temporaneo per sicurezza
+TMP_FILE=$(mktemp "$DEST_DIR/authorized_keys.tmp.XXXXXX")
+
+# Assicura che il file temporaneo venga rimosso in caso di errore
+trap 'echo "ERRORE: Uscita inaspettata. Rimuovo file temporaneo."; rm -f "$TMP_FILE"' EXIT
+
+#echo "INFO: Raccolgo le chiavi da $KEY_SOURCE_DIR..."
+
+# 5. Core: Trova, filtra e scrivi sul file temporaneo.
+#    Se 'find | grep' non produce output, il file TMP sarà vuoto.
+#    Usiamo '|| true' per evitare che 'set -e' termini lo script
+#    se grep non trova nulla (che ora è un comportamento accettato).
+{ find "$KEY_SOURCE_DIR" -maxdepth "$MAX_DEPTH" -type f -not -path '*/_*' -exec cat {} + ; } | \
+    grep -vE '^(#|$)' > "$TMP_FILE" || true
+
+# 6. Imposta i permessi corretti SUL FILE TEMPORANEO
+chmod 600 "$TMP_FILE"
+
+# 7. Sostituzione Atomica: Sposta il file temporaneo su quello reale
+#    Questo SOVRASCRIVE il vecchio file. Se TMP_FILE è vuoto,
+#    DEST_FILE diventerà vuoto.
+mv "$TMP_FILE" "$DEST_FILE"
+
+# 8. Successo: Rimuovi il "trap" di emergenza
+trap - EXIT
+
+#echo "---"
+#echo "Successo! Il file $DEST_FILE è stato aggiornato."
+
+# 9. Conta le chiavi caricate (leggendo il file appena creato)
+KEY_COUNT=$(wc -l < "$DEST_FILE" | tr -d ' ')
+echo "$KEY_COUNT chiavi sono state caricate."
