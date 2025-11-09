@@ -1,0 +1,15 @@
+services:
+  filebrowser:
+    container_name: filebrowser
+    hostname: filebrowser
+    image: filebrowser/filebrowser:v2.42.5-s6
+    volumes:
+      #- /mnt/ssd1:/data
+      - ./data:/srv
+      - ./database:/database
+      - ./config:/config
+    environment:
+      - FB_BASEURL="/"
+      - PUID=1000
+      - PGID=1000
+    restart: unless-stopped

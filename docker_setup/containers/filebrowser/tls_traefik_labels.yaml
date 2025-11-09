@@ -1,0 +1,28 @@
+services:
+  filebrowser:
+    # ... (image, volumi, ecc.)
+    labels:
+      # --- Abilitazione e Rete ---
+      traefik.enable: "true"
+      traefik.docker.network: "cust_traefik"
+
+      # --- Router (Come Traefik riceve il traffico) ---
+      traefik.http.routers.filebrowser.rule: "Host(`cloud.filonzi.it`)"
+      traefik.http.routers.filebrowser.entrypoints: "websecure"
+      
+      # --- Gestione TLS (HTTPS) ---
+      traefik.http.routers.filebrowser.tls: "true"
+      traefik.http.routers.filebrowser.tls.certresolver: "lets-encrypt"
+
+      # Collega questo router al servizio definito sotto
+      traefik.http.routers.filebrowser.service: "filebrowser"
+
+      # --- Servizio (Dove Traefik inoltra il traffico) ---
+      traefik.http.services.filebrowser.loadbalancer.server.port: 80
+
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true
