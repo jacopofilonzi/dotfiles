@@ -7,7 +7,7 @@ services:
       traefik.docker.network: "cust_traefik"
 
       # --- Router (Come Traefik riceve il traffico) ---
-      traefik.http.routers.filebrowser.rule: "Host(`cloud.filonzi.it`)"
+      traefik.http.routers.filebrowser.rule: "Host(`cloud.domain.com`)"
       traefik.http.routers.filebrowser.entrypoints: "websecure"
       
       # --- Gestione TLS (HTTPS) ---

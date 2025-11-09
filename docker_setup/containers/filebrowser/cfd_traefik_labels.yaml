@@ -3,7 +3,7 @@ services:
     # ...
     labels:
       # --- Router (Intercettazione) ---
-      traefik.http.routers.filebrowser_cfproxy.rule: Host(`cloud.filonzi.it`)
+      traefik.http.routers.filebrowser_cfproxy.rule: Host(`cloud.domain.com`)
       traefik.http.routers.filebrowser_cfproxy.entrypoints: cfproxy
       
       # --- Il collegamento al Service ---
