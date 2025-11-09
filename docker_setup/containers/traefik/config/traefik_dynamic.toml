@@ -16,7 +16,7 @@
 ################################################################
 
 [http.routers.traefik_dashboard]
-    rule = "Host(`traefik.l.filonzi.it`)"
+    rule = "Host(`traefik.l.domain.com`)"
     entryPoints = ["websecure"]
     #middlewares = ["basicAuth"] # Uncomment to enable BasicAuth protection
     service = "api@internal"
