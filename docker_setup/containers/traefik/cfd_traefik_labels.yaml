@@ -1,0 +1,26 @@
+# Labels for proxied containers via Cloudflare Tunnel
+
+services:
+  <container_name>:
+    # ...
+    labels:
+      # --- Router (Intercettazione) ---
+      traefik.http.routers.<container_name>_cfproxy.rule: Host(`<redirect domain name>`)
+      traefik.http.routers.<container_name>_cfproxy.entrypoints: cfproxy
+      
+      # --- Il collegamento al Service ---
+      traefik.http.routers.<container_name>_cfproxy.service: <container_name>
+
+      # --- Servizio (Destinazione) ---
+      traefik.http.services.<container_name>.loadbalancer.server.port: <port>
+
+      # --- Generale ---
+      traefik.enable: "true"
+      traefik.docker.network: "cust_traefik"
+      
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true

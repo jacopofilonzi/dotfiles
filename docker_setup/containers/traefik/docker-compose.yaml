@@ -1,0 +1,40 @@
+name: traefik
+
+services:
+  traefik:
+    image: traefik:v3.5
+    container_name: traefik_proxy
+    hostname: traefik
+    restart: unless-stopped
+    ports:
+      - "80:80"       # HTTP port
+      - "81:81"       # HTTP[s] proxied trough cloudflare
+      - "443:443"     # HTTPS port
+
+      # - "8080:8080"   # Traefik Web UI ( enable api.insecure )
+    environment:
+      - CF_API_EMAIL=${CF_EMAIL}           # Cloudflare email for DNS challenge
+      - CLOUDFLARE_DNS_API_TOKEN=${CF_API_TOKEN}       # Cloudflare API key for DNS challenge
+
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+      - ./config/traefik.toml:/etc/traefik/traefik.toml
+      - ./config/traefik_dynamic.toml:/etc/traefik/traefik_dynamic.toml
+      - ./data/acme.json:/etc/letsencrypt/acme.json
+
+    networks:
+      net_access:
+      dangling:
+        ipv4_address: 172.30.1.3
+      cust_traefik:
+        #ipv4_address: 172.30.0.2
+
+networks:
+  cust_traefik:
+    external: true
+  net_access:
+    external: true
+  dangling:
+    external: true

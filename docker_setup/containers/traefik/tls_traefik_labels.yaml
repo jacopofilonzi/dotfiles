@@ -1,0 +1,30 @@
+# Labels for proxied containers via Traefik with TLS
+
+services:
+  <container_name>:
+    # ... (image, volumi, ecc.)
+    labels:
+      # --- Abilitazione e Rete ---
+      traefik.enable: "true"
+      traefik.docker.network: "cust_traefik"
+
+      # --- Router (Come Traefik riceve il traffico) ---
+      traefik.http.routers.<container_name>.rule: "Host(`<redirect domain name>`)"
+      traefik.http.routers.<container_name>.entrypoints: "websecure"
+      
+      # --- Gestione TLS (HTTPS) ---
+      traefik.http.routers.<container_name>.tls: "true"
+      traefik.http.routers.<container_name>.tls.certresolver: "lets-encrypt"
+
+      # Collega questo router al servizio definito sotto
+      traefik.http.routers.<container_name>.service: "<container_name>"
+
+      # --- Servizio (Dove Traefik inoltra il traffico) ---
+      traefik.http.services.<container_name>.loadbalancer.server.port: "<port>"
+
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true

@@ -1,0 +1,25 @@
+################################################################
+# BasicAuth Middleware
+################################################################
+
+# Define a BasicAuth middleware to protect services with a username and password.
+#
+# The password is hashed using bcrypt for security.
+# online tool: https://hostingcanada.org/htpasswd-generator/
+[http.middlewares.basicAuth.basicAuth]
+    users= [
+        "admin:$2a$12$k8rAd1C7rl2805S0BNyKIud3RS7/0iQu/klQFg4uASvoq7BXBY59u" # admin:admin CHANGEME
+    ]
+
+################################################################
+# Traefik dashboard
+################################################################
+
+[http.routers.traefik_dashboard]
+    rule = "Host(`traefik.l.filonzi.it`)"
+    entryPoints = ["websecure"]
+    #middlewares = ["basicAuth"] # Uncomment to enable BasicAuth protection
+    service = "api@internal"
+    [http.routers.traefik_dashboard.tls]
+        certResolver = "lets-encrypt"
+
