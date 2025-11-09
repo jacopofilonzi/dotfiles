@@ -1,0 +1,28 @@
+services:
+  ntfy:
+    # ... (image, volumi, ecc.)
+    labels:
+      # --- Abilitazione e Rete ---
+      traefik.enable: true
+      traefik.docker.network: "cust_traefik"
+
+      # --- Router (Come Traefik riceve il traffico) ---
+      traefik.http.routers.ntfy.rule: "Host(`${DOMAIN}`)"
+      traefik.http.routers.ntfy.entrypoints: "websecure"
+      
+      # --- Gestione TLS (HTTPS) ---
+      traefik.http.routers.ntfy.tls: "true"
+      traefik.http.routers.ntfy.tls.certresolver: "lets-encrypt"
+
+      # Collega questo router al servizio definito sotto
+      traefik.http.routers.ntfy.service: "ntfy"
+
+      # --- Servizio (Dove Traefik inoltra il traffico) ---
+      traefik.http.services.ntfy.loadbalancer.server.port: 80
+
+    networks:
+      - cust_traefik
+
+networks:
+  cust_traefik:
+    external: true
