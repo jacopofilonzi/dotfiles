@@ -1,0 +1,25 @@
+#!/bin/bash
+
+fzf_args=(
+    --multi
+    # Usa 'apt-cache show' per l'anteprima
+    --preview 'apt-cache show {1}'
+    --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
+    --preview-label-pos='bottom'
+    --preview-window 'down:65%:wrap'
+    --bind 'alt-p:toggle-preview'
+    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+    --bind 'alt-k:preview-up,alt-j:preview-down'
+    --color 'pointer:green,marker:green'
+)
+
+# Usa 'apt-cache pkgnames' per ottenere l'elenco di tutti i pacchetti disponibili
+pkg_names=$(apt-cache pkgnames | fzf "${fzf_args[@]}")
+
+if [[ -n "$pkg_names" ]]; then
+    # Converti le selezioni separate da newline in una riga separata da spazi
+    # e installa con 'apt install -y'
+    echo "$pkg_names" | tr '\n' ' ' | xargs sudo apt install -y
+
+    echo "Installazione completata."
+fi

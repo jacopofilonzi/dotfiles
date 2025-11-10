@@ -1,0 +1,27 @@
+#!/bin/bash
+
+fzf_args=(
+    --multi
+    # Usa 'dpkg -s' per mostrare le info del pacchetto installato
+    --preview 'dpkg -s {1}'
+    --preview-label='alt-p: toggle description, alt-j/k: scroll, tab: multi-select'
+    --preview-label-pos='bottom'
+    --preview-window 'down:65%:wrap'
+    --bind 'alt-p:toggle-preview'
+    --bind 'alt-d:preview-half-page-down,alt-u:preview-half-page-up'
+    --bind 'alt-k:preview-up,alt-j:preview-down'
+    --color 'pointer:red,marker:red'
+)
+
+# Elenca i pacchetti installati (apt-mark showmanual elenca quelli installati manualmente)
+# Alternativa per TUTTI i pacchetti: dpkg-query -Wf '${Package}\n'
+pkg_names=$(apt-mark showmanual | fzf "${fzf_args[@]}")
+
+if [[ -n "$pkg_names" ]]; then
+    # Converte la lista per xargs
+    # 'autoremove --purge -y' equivale a 'Rns --noconfirm'
+    # Rimuove i pacchetti, le configurazioni (--purge) e le dipendenze orfane (autoremove)
+    echo "$pkg_names" | tr '\n' ' ' | xargs sudo apt autoremove --purge -y
+
+    echo "Rimozione completata."
+fi
