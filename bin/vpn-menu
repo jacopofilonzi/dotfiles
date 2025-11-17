@@ -1,0 +1,55 @@
+#!/bin/bash
+
+export PATH="$HOME/.local/share/omarchy/bin:$PATH"
+
+# Set to true when going directly to a submenu, so we can exit directly
+BACK_TO_EXIT=false
+
+back_to() {
+    local parent_menu="$1"
+
+    if [[ "$BACK_TO_EXIT" == "true" ]]; then
+        exit 0
+    elif [[ -n "$parent_menu" ]]; then
+        "$parent_menu"
+    else
+        show_main_menu
+    fi
+}
+
+menu() {
+    local prompt="$1"
+    local options="$2"
+    local extra="$3"
+    local preselect="$4"
+
+    read -r -a args <<<"$extra"
+
+    if [[ -n "$preselect" ]]; then
+        local index
+        index=$(echo -e "$options" | grep -nxF "$preselect" | cut -d: -f1)
+        if [[ -n "$index" ]]; then
+            args+=("-c" "$index")
+        fi
+    fi
+
+    echo -e "$options" | omarchy-launch-walker --dmenu --width 295 --minheight 1 --maxheight 600 -p "$prompt…" "${args[@]}" 2>/dev/null
+}
+
+show_vpn_list_menu() {
+    case $(menu "Available VPN" "  OFF\n  HomeLAB\n  VPS1-LN\n  VPS1-OC\n  VPS2-OC") in
+    *HomeLAB*) wg-manager "homelab" ;;
+    *VPS1-LN*) wg-manager "vps1-ln" ;;
+    *VPS1-OC*) wg-manager "vps1-oc" ;;
+    *VPS2-OC*) wg-manager "vps2-oc" ;;
+
+    *OFF*) wg-manager --off ;;
+    esac
+}
+
+if [[ -n "$1" ]]; then
+    BACK_TO_EXIT=true
+    go_to_menu "$1"
+else
+    show_vpn_list_menu
+fi

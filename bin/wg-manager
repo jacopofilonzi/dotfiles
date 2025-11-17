@@ -1,0 +1,96 @@
+#!/bin/bash
+
+# --- wg-manager ---
+# Script per gestire il toggle, lo switch e lo stato delle interfacce WireGuard.
+# Versione adattata per l'uso con regole sudoers specifiche.
+
+# === Funzione per trovare l'interfaccia attiva ===
+# 'wg show' elenca solo le interfacce attive.
+# Prendiamo la prima riga (head -n 1) e estraiamo il secondo campo (awk '{print $2}').
+get_active_interface() {
+    # Aggiunto sudo qui
+    sudo wg show | head -n 1 | awk '{print $2}'
+}
+
+# === Gestione dei Comandi ===
+
+COMMAND="$1"
+
+# Linea 19 (circa)
+case "$COMMAND" in
+"")
+    # Nessun comando fornito
+    echo "Utilizzo:"
+    echo "  wg-manager <interface-name>  (Attiva/Disattiva/Cambia)"
+    echo "  wg-manager --status          (Mostra l'interfaccia attiva)"
+    echo "  wg-manager --off             (Disattiva la VPN corrente)"
+    exit 2
+    ;;
+
+"--status")
+    # Comando: --status
+    # Stampa l'interfaccia attiva (o nulla se nessuna è attiva)
+    ACTIVE_IFACE=$(get_active_interface)
+    echo "$ACTIVE_IFACE"
+    exit 0
+    ;;
+
+"--off")
+    # Comando: --off
+    # Disattiva l'interfaccia attualmente attiva, se ce n'è una.
+    CURRENTLY_ACTIVE_IFACE=$(get_active_interface)
+
+    if [ -n "$CURRENTLY_ACTIVE_IFACE" ]; then
+        # C'è un'interfaccia attiva, la disattiviamo
+        echo "Disattivazione: $CURRENTLY_ACTIVE_IFACE" >&2
+        sudo wg-quick down "$CURRENTLY_ACTIVE_IFACE"
+        exit 0 # Stato finale è 'off'
+    else
+        # Nessuna VPN è attiva
+        echo "Nessuna VPN attiva." >&2
+        exit 0 # Stato finale è già 'off'
+    fi
+    ;;
+
+*)
+    # Comando: <interface-name> (tutto ciò che non è --status o --off)
+    IFACE_TO_TOGGLE="$1"
+
+    # Ottieni l'interfaccia attualmente attiva (se esiste)
+    CURRENTLY_ACTIVE_IFACE=$(get_active_interface)
+
+    if [ "$IFACE_TO_TOGGLE" == "$CURRENTLY_ACTIVE_IFACE" ]; then
+        # --- CASO 1: TOGGLE OFF ---
+        # L'interfaccia richiesta è GIA' attiva. La disattiviamo.
+        echo "Disattivazione: $IFACE_TO_TOGGLE" >&2
+        # Aggiunto sudo qui
+        sudo wg-quick down "$IFACE_TO_TOGGLE"
+        # Restituisce 0 (disattivata)
+        exit 0
+    else
+        # --- CASO 2: TOGGLE ON o SWITCH ---
+        # L'interfaccia richiesta è SPENTA. La attiviamo.
+
+        # Prima, disattiva qualsiasi altra VPN attiva (gestione dello SWITCH)
+        if [ -n "$CURRENTLY_ACTIVE_IFACE" ]; then
+            echo "Switch: Disattivazione $CURRENTLY_ACTIVE_IFACE..." >&2
+            # Aggiunto sudo qui
+            sudo wg-quick down "$CURRENTLY_ACTIVE_IFACE"
+        fi
+
+        # Ora, attiva la nuova interfaccia
+        echo "Attivazione: $IFACE_TO_TOGGLE" >&2
+        # Aggiunto sudo qui
+        sudo wg-quick up "$IFACE_TO_TOGGLE"
+
+        # Controlla se l'attivazione è riuscita
+        if [ $? -eq 0 ]; then
+            # Restituisce 1 (attivata)
+            exit 1
+        else
+            echo "Errore durante l'attivazione di $IFACE_TO_TOGGLE." >&2
+            exit 4 # Errore generico di attivazione
+        fi
+    fi
+    ;;
+esac
