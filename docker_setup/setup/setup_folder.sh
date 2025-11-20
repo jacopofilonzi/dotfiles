@@ -7,7 +7,7 @@ TARGET_GROUP="docker"
 
 # 1. Crea le cartelle se non esistono
 echo "Verifica e creazione delle directory: ${CONTAINERS_DIR}"
-mkdir -p "${CONTAINERS_DIR}"
+sudo mkdir -p "${CONTAINERS_DIR}"
 
 # Verifica se il gruppo esiste
 if ! getent group "${TARGET_GROUP}" >/dev/null; then
