@@ -1,0 +1,18 @@
+alias cls="clear"
+alias poff="poweroff"
+
+
+alias py="python3"
+
+
+alias lockdown='sudo ufw insert 1 deny in from any comment "lockdown"'
+alias nolockdown="sudo ufw delete deny in from any"
+
+
+alias ipaddr="curl ifconfig.me"
+
+
+alias la="ls -a"
+
+
+alias pkg-clear-cache="sudo paccache -rk1"

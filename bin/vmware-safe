@@ -1,0 +1,17 @@
+#!/bin/bash
+
+# Salva le opzioni XKB correnti
+CURRENT_XKB=$(setxkbmap -query | grep options | awk '{print $2}')
+
+# Disattiva le opzioni XKB per prevenire il crash di VMware
+setxkbmap -option ""
+
+# Avvia VMware
+/usr/bin/vmware
+
+# Ripristina le opzioni XKB originali
+if [ -n "$CURRENT_XKB" ]; then
+    setxkbmap -option "$CURRENT_XKB"
+else
+    setxkbmap -option ""
+fi
